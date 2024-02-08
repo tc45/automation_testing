@@ -1,0 +1,29 @@
+host,hostname, username,password,device_type,interface,ip_address,subnet_mask, loopback_mgmt_ip, loopback_network
+192.168.1.233,WAN1,cisco,cisco123,cisco_ios,Loopback0,10.1.1.1,255.255.255.255,10.99.0.1,10.99.101.0
+192.168.1.232,WAN2,cisco,cisco123,cisco_ios,Loopback0,10.1.1.2,255.255.255.255,10.99.0.2,10.99.102.0
+192.168.1.230,WAN3,cisco,cisco123,cisco_ios,Loopback0,10.1.1.3,255.255.255.255
+192.168.1.234,WAN4,cisco,cisco123,cisco_ios,Loopback0,10.1.1.1,255.255.255.255
+192.168.1.228,WAN5,cisco,cisco123,cisco_ios,Loopback0,10.1.1.2,255.255.255.255
+192.168.1.231,WAN6,cisco,cisco123,cisco_ios,Loopback0,10.1.1.3,255.255.255.255
+192.168.1.227,WAN7,cisco,cisco123,cisco_ios,Loopback0,10.1.1.1,255.255.255.255
+
+
+hostname {{ hostname }}
+
+ip domain-name mine.local
+
+crypto key gen rsa gen mod 2048
+
+interface Loopback0
+ ip address {{ loopback_mgmt_ip }} {{ loopback_mgmt_subnet_mask }}
+ no shutdown
+
+interface {{ interface }}
+ ip address {{ ip_address }} {{ subnet_mask }}
+ ip ospf network point-to-point
+ no shutdown
+
+router ospf 1
+ router-id {{ loopback_mgmt_ip }}
+ network {{ loopback_mgmt_ip }} {{ loopback_mgmt_host_mask }} area 0
+ network {{ network }} {{ host_mask }}area 0

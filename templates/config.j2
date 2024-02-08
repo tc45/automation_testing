@@ -1,0 +1,17 @@
+hostname {{ hostname }}
+
+
+{% for intf in interfaces %}
+interface {{ intf.name }}
+ {% if intf.name == 'eth0/1' %}
+     ip address {{ intf.ip_address }} {{ intf.subnet_mask }}
+     no shutdown
+     ip ospf network point-to-point
+ {% else %}
+    ip address {{ intf.ip_address }} {{ intf.subnet_mask }}
+    no shutdown
+
+ router ospf 1
+  network {{ intf.network }} {{ intf.wildcard_mask }} area 0
+ {% endif %}
+{% endfor %}

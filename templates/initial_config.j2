@@ -1,0 +1,23 @@
+hostname {{ hostname }}
+
+ip domain-name mine.local
+
+crypto key gen rsa gen mod 2048
+
+interface Loopback0
+ ip address {{ loopback_mgmt_ip }} {{ loopback_mgmt_subnet_mask }}
+ no shutdown
+
+interface {{ interface }}
+ ip address {{ ip_address }} {{ subnet_mask }}
+ ip ospf network point-to-point
+ no shutdown
+
+router ospf 1
+ router-id {{ loopback_mgmt_ip }}
+ network {{ loopback_mgmt_ip }} {{ loopback_mgmt_host_mask }} area 0
+ network {{ network }} {{ host_mask }}area 0
+
+line vty 0 4
+ login local
+ transport input ssh

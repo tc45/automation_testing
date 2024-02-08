@@ -1,0 +1,8 @@
+host,username,password,device_type,command
+192.168.1.233,cisco,cisco123,cisco_ios,show ip interface brief
+192.168.1.232,cisco,cisco123,cisco_ios,show ip route
+192.168.1.230,cisco,cisco123,cisco_ios,show version
+192.168.1.234,cisco,cisco123,cisco_ios,show ip ospf int br
+192.168.1.228,cisco,cisco123,cisco_ios,show ip ospf neighbor
+192.168.1.231,cisco,cisco123,cisco_ios,show tech
+192.168.1.227,cisco,cisco123,cisco_ios,show cdp neighbor detail
