@@ -2,6 +2,8 @@ import requests
 from requests.auth import HTTPDigestAuth
 
 
+# This is a test
+
 def test_get_with_basic_auth():
     url = 'https://httpbin.org/basic-auth/user/password'
     auth = requests.auth.HTTPBasicAuth('user', 'password')
