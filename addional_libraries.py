@@ -9,6 +9,13 @@ import requests
 
 
 def fetch_request_data(url, api_token):
+    """
+    Fetch data from a given URL with an API token for authorization.
+
+    :param url: The URL to make the request to.
+    :param api_token: The API token used for authorization.
+    :return: A Python dict containing the JSON response or an error message.
+    """
     headers = {
         "Accept": "application/json",
         "Authorization": f"Bearer {api_token}",
@@ -21,6 +28,12 @@ def fetch_request_data(url, api_token):
 
 
 def get_csv_data(filename):
+    """
+    Read CSV data into a dictionary of records.
+
+    :param filename: The name of the CSV file to read.
+    :return: A list of dictionaries representing the rows of the CSV.
+    """
     df = pd.read_csv(filename)
     if not df.empty:
         device_data_dict = df.to_dict(orient='records')
@@ -30,6 +43,12 @@ def get_csv_data(filename):
 
 
 def create_device_report(filename, devices):
+    """
+    Create an Excel report for a list of devices.
+
+    :param filename: The name of the Excel file to create.
+    :param devices: A list of tuples containing device information.
+    """
     wb = Workbook()
     ws = wb.active
     ws.append(["Device Name", "IP Address", "Location"])
@@ -39,10 +58,22 @@ def create_device_report(filename, devices):
 
 
 def read_device_info(filename):
+    """
+    Read device information from a CSV file using Pandas.
+
+    :param filename: The name of the CSV file to read.
+    :return: A DataFrame containing the device information.
+    """
     return pd.read_csv(filename)
 
 
 def execute_commands_on_devices_threading(filename):
+    """
+    Execute commands on devices listed in a CSV file using threading.
+
+    :param filename: The name of the CSV file containing device and command information.
+    :return: A list of results with command outputs for each device.
+    """
     device_info_df = read_device_info(filename)
     threads = []
     results = []
@@ -62,6 +93,12 @@ def execute_commands_on_devices_threading(filename):
 
 
 def connect_and_execute_thread(device_info, results):
+    """
+    Connect to a device and execute a command in a separate thread.
+
+    :param device_info: A dictionary containing device connection details.
+    :param results: A shared list to store the results.
+    """
     device = {
         'device_type': device_info['device_type'],
         'host': device_info['host'],
@@ -82,6 +119,12 @@ def connect_and_execute_thread(device_info, results):
 
 
 def write_results_to_excel(results, output_filename):
+    """
+    Write command execution results to an Excel file.
+
+    :param results: A list of tuples containing the results.
+    :param output_filename: The name of the Excel file to create.
+    """
     wb = Workbook()
     ws = wb.active
     ws.append(["Host", "Command", "Output"])
@@ -91,6 +134,14 @@ def write_results_to_excel(results, output_filename):
 
 
 def render_templates_for_devices(template_path, template_name, devices_df):
+    """
+    Render configuration templates for devices using Jinja2.
+
+    :param template_path: The path to the directory containing the template file.
+    :param template_name: The name of the template file.
+    :param devices_df: A DataFrame containing device information.
+    :return: A list of tuples with hostnames and rendered configurations.
+    """
     env = Environment(loader=FileSystemLoader(template_path))
     template = env.get_template(template_name)
     configs = []
@@ -103,6 +154,13 @@ def render_templates_for_devices(template_path, template_name, devices_df):
 
 
 def apply_configurations_from_csv(csv_filename, template_path, template_name):
+    """
+    Apply configurations to devices based on a CSV file and a Jinja2 template.
+
+    :param csv_filename: The filename of the CSV containing device details.
+    :param template_path: The path to the Jinja2 templates directory.
+    :param template_name: The name of the Jinja2 template file.
+    """
     devices_df = read_device_info(csv_filename)
     # Apply the invert_subnet_mask function to the 'subnet_mask' column
     if 'subnet_mask' in devices_df.columns:
@@ -123,6 +181,12 @@ def apply_configurations_from_csv(csv_filename, template_path, template_name):
 
 
 def apply_configuration(device_details, configuration):
+    """
+    Apply a given configuration to a device using Netmiko.
+
+    :param device_details: A dictionary containing the device's connection details.
+    :param configuration: The configuration commands to be applied to the device.
+    """
     try:
         with ConnectHandler(**device_details) as net_connect:
             output = net_connect.send_config_set(configuration.split('\n'))
@@ -133,6 +197,12 @@ def apply_configuration(device_details, configuration):
 
 # Function to invert subnet mask
 def invert_subnet_mask(subnet_mask):
+    """
+    Invert a subnet mask to calculate the wildcard mask.
+
+    :param subnet_mask: The subnet mask to be inverted.
+    :return: The inverted subnet mask as a string.
+    """
     # Create an IPv4 network object from the subnet mask
     net = ipaddress.IPv4Network('0.0.0.0/' + subnet_mask, strict=False)
     # Invert the netmask and return it as a string
@@ -141,41 +211,54 @@ def invert_subnet_mask(subnet_mask):
 
 
 def get_device_facts(device_type, hostname, username, password):
+    """
+    Retrieve facts about a device using a network driver.
+
+    :param device_type: The type of device (e.g., 'ios', 'junos').
+    :param hostname: The hostname or IP address of the device.
+    :param username: The username for device authentication.
+    :param password: The password for device authentication.
+    :return: A dictionary containing device facts.
+    """
     driver = get_network_driver(device_type)
     with driver(hostname, username, password, optional_args={'secret': 'your_enable_password'}) as device:
         return device.get_facts()
 
 
 def add_one_to_network(network_address):
+    """
+    Add one to the network address to calculate the first host address.
+
+    :param network_address: The network address in CIDR notation.
+    :return: The first host address in the network as a string.
+    """
     network = ipaddress.IPv4Interface(network_address)
     first_host = str(network.network.network_address + 1)
     return first_host
 
-def initial_setup():
-    pass
 
 def main():
 
-    # # Example usage for simple requests
-    # print("* " * 10 + "Starting basic requests function." + "* " * 10)
-    # url = "https://httpbin.org/get"
-    # api_token = "12345678"
-    # devices_data = fetch_request_data(url, api_token)
-    # print(devices_data)
-    #
-    # # Example usage for parsing CSVs using Pandas
-    # print("* " * 10 + "Starting Pandas CSV function." + "* " * 10)
-    # filename = 'devices.csv'
-    # device_info = get_csv_data(filename)
-    # print(device_info)
+    # Example usage for simple requests
+    print("* " * 10 + "Starting basic requests function." + "* " * 10)
+    url = "https://httpbin.org/get"
+    api_token = "12345678"
+    devices_data = fetch_request_data(url, api_token)
+    print(devices_data)
 
-    # # Import CSV to pandas, multi-thread connections to each device, collect data, write to Excel.
-    # print("* " * 10 + "Starting multi threading function." + "* " * 10)
-    # input_filename = 'device_commands.csv'
-    # output_filename = 'command_outputs.xlsx'
-    # results = execute_commands_on_devices_threading(input_filename)
-    # write_results_to_excel(results, output_filename)
-    # print("Done writing command outputs to Excel.")
+    # Example usage for parsing CSVs using Pandas
+    print("* " * 10 + "Starting Pandas CSV function." + "* " * 10)
+    filename = 'devices.csv'
+    device_info = get_csv_data(filename)
+    print(device_info)
+
+    # Import CSV to pandas, multi-thread connections to each device, collect data, write to Excel.
+    print("* " * 10 + "Starting multi threading function." + "* " * 10)
+    input_filename = 'device_commands.csv'
+    output_filename = 'command_outputs.xlsx'
+    results = execute_commands_on_devices_threading(input_filename)
+    write_results_to_excel(results, output_filename)
+    print("Done writing command outputs to Excel.")
 
     # Use Jinja2 template to apply loopback configuration and enable in OSPF Area 0
     print("* " * 10 + "Starting Jinja2 function." + "* " * 10)
@@ -187,7 +270,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # Initial eve-ng setup
-    initial_setup()
     main()
 
